@@ -25,13 +25,25 @@
 <body>
 
   <h1>Pet Simulator Value List</h1>
-  <input type="text" id="searchInput" class="search-bar" placeholder="Szukaj peta po nazwę..." onkeyup="filterPets()">
+  <input type="text" id="searchInput" class="search-bar" placeholder="Szukaj peta po nazwie..." onkeyup="filterPets()">
 
   <div class="grid" id="petsGrid">Ładowanie petów...</div>
 
   <script>
-    const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRt1mqDC-jktFw6eepQKTStgEr5SblZYAE4j-DkJhFYZS90QoSb3LULmQRiv_SIuLh7w2bRHOD7VMc6/pubhtml';
+    const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRt1mqDC-jktFw6eepQKTStgEr5Sb1ZYAE4j-DkJhFYZS90QoSb3LULmQRiv_SiLh7w2bRHOD7VMc6/pub?output=csv';
     let petsData = [];
+
+    function parseCSVLine(text) {
+      let regex = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\s\S][^'\\]*)*)'|"([^"\\]*(?:\\[\s\S][^"\\]*)*)"|([^,'"\s\\]*(?:\s+[^,'"\s\\]+)*))\s*(?:,|$)/g;
+      let arr = [];
+      text.replace(regex, function(m0, m1, m2, m3) {
+        if (m1 !== undefined) arr.push(m1.replace(/\\'/g, "'"));
+        else if (m2 !== undefined) arr.push(m2.replace(/\\"/g, '"'));
+        else if (m3 !== undefined) arr.push(m3);
+        return '';
+      });
+      return arr;
+    }
 
     async function loadPets() {
       try {
@@ -40,16 +52,16 @@
         const rows = data.split('\n').slice(1);
 
         petsData = rows.map(row => {
-          const columns = row.split(',');
+          const columns = parseCSVLine(row);
           return {
-            nazwa: columns[0]?.trim(),
-            normal: columns[1]?.trim(),
-            golden: columns[2]?.trim(),
-            rainbow: columns[3]?.trim(),
-            popyt: columns[4]?.trim(),
-            obrazek: columns[5]?.trim()
+            nazwa: columns[0]?.trim() || '',
+            normal: columns[1]?.trim() || 'N/A',
+            golden: columns[2]?.trim() || 'N/A',
+            rainbow: columns[3]?.trim() || 'N/A',
+            popyt: columns[4]?.trim() || 'N/A',
+            obrazek: columns[5]?.trim() || ''
           };
-        }).filter(pet => pet.nazwa);
+        }).filter(pet => pet.nazwa.length > 0);
 
         renderPets(petsData);
       } catch (error) {
@@ -68,11 +80,11 @@
           <img src="${pet.obrazek}" alt="${pet.nazwa}" onerror="this.src='https://via.placeholder.com/100?text=No+Image'">
           <h3>${pet.nazwa}</h3>
           <div class="values">
-            <div class="val-normal">⚪ Normal: ${pet.normal || 'N/A'}</div>
-            <div class="val-golden">🟡 Golden: ${pet.golden || 'N/A'}</div>
-            <div class="val-rainbow">🌈 Rainbow: ${pet.rainbow || 'N/A'}</div>
+            <div class="val-normal">⚪ Normal: ${pet.normal}</div>
+            <div class="val-golden">🟡 Golden: ${pet.golden}</div>
+            <div class="val-rainbow">🌈 Rainbow: ${pet.rainbow}</div>
           </div>
-          <div class="demand">Demand: ${pet.popyt || 'N/A'}</div>
+          <div class="demand">Demand: ${pet.popyt}</div>
         `;
         grid.appendChild(card);
       });
